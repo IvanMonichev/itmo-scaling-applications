@@ -1,14 +1,17 @@
 # Scaling Applications
 
 ## Содержимое registry
+
 ![01](images/01.jpg)
 
 ## Authenticating with the Registry
+
 ![alt text](images/02.jpg)
 ![alt text](images/03.jpg)
 ![alt text](images/04.jpg)
 
 ## Docker Orchestration Hands-on Lab
+
 ![alt text](images/05.png)
 ![alt text](images/06.png)
 ![alt text](images/07.png)
@@ -25,6 +28,7 @@
 Нужно инициировать перераспределение задач сервиса, или изменить количество реплик.
 
 ## Swarm stack introduction
+
 ![alt text](images/11.png)
 ![alt text](images/12.png)
 ![alt text](images/13.png)
@@ -60,7 +64,6 @@ healthcheck:
 - Длительность: 30 секунд
 - Endpoint: GET /api/counter
 
-
 | Параметр    | 1 реплика | 4 реплики | Изменение |
 | ----------- | --------- | --------- | --------- |
 | RPS         | 1695      | 2203      | **+30%**  |
@@ -73,3 +76,40 @@ healthcheck:
 > Существуют ли какие-то особенности при работе реплицированного сервиса с БД?
 
 Репликация сервиса базы данных без поддержки кластеризации приводит к нарушению целостности данных. В отличие от stateless-сервисов, базы данных требуют специализированных механизмов синхронизации состояния.
+
+## Оценка производительности Flask-приложения при масштабировании в k8s
+
+![alt text](images/17.png)
+![alt text](images/18.png)
+![alt text](images/19.png)
+![alt text](images/20.png)
+![alt text](images/21.png)
+
+Конфигурация теста
+
+- Инструмент: wrk
+- Потоки: 4
+- Соединения: 50
+- Длительность: 30 секунд
+- Endpoint: GET /api/counter
+
+| Параметр     | 1 реплика | 4 реплики | Изменение       |
+| ------------ | --------- | --------- | --------------- |
+| Requests/sec | 1309.72   | 1812.60   | **+38%**        |
+| Avg Latency  | 14.10 ms  | 14.11 ms  | ~ без изменений |
+| Max Latency  | 113.82 ms | 176.89 ms | ↑               |
+
+> Изменился ли потенциал обработки запросов?
+
+Увеличение количества реплик Flask-сервиса с 1 до 4 привело к росту пропускной способности примерно на 38%, более эффективной обработке параллельных запросов. Средняя задержка осталась практически неизменной.
+
+> Сравнение с Docker Swarm
+
+Эффект масштабирования в Kubernetes сопоставим с Docker Swarm, однако более сложная сетевая модель Kubernetes приводит к дополнительным накладным расходам и снижению RPS.
+
+### Конфигурационные файлы k8s
+
+1. [counter-deployment.yaml](k8s/counter-deployment.yaml)
+2. [counter-service.yaml](k8s/counter-service.yaml)
+3. [redis-deployment.yaml](k8s/redis-deployment.yaml)
+4. [redis-service.yaml](k8s/redis-service.yaml)
